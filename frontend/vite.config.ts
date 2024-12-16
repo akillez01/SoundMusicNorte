@@ -6,13 +6,18 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"), // Define '@' como atalho para 'src'
+      "@": path.resolve(__dirname, "src"), // Atalho '@' para a pasta 'src'
     },
   },
   server: {
-    port: 3000, // Define a porta do servidor de desenvolvimento como 3000
+    port: 3000, // Porta do servidor de desenvolvimento
+    open: true, // Abre o navegador automaticamente ao iniciar o servidor
     hmr: {
-      overlay: false, // Desativa o overlay de erros no navegador
+      overlay: true, // Mantém o overlay de erros ativado para feedback visual
     },
+  },
+  build: {
+    sourcemap: true, // Gera mapas de fonte para depuração em produção
+    chunkSizeWarningLimit: 1000, // Aumenta o limite de tamanho do chunk para evitar avisos
   },
 });
