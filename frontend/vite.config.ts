@@ -19,5 +19,7 @@ export default defineConfig({
   build: {
     sourcemap: true, // Gera mapas de fonte para depuração em produção
     chunkSizeWarningLimit: 1000, // Aumenta o limite de tamanho do chunk para evitar avisos
+    outDir: 'dist', // Garantir que o Vite coloca os arquivos de build na pasta correta
+    assetsDir: 'assets', // Pasta onde os arquivos estáticos (CSS, JS, imagens) serão colocados
   },
 });
