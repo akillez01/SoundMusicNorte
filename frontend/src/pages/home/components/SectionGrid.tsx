@@ -9,10 +9,11 @@ type SectionGridProps = {
   isLoading: boolean;
 };
 
-const SectionGrid = ({ songs = [], title, isLoading }: SectionGridProps) => {  // Defaulting to empty array
+const SectionGrid = ({ songs = [], title, isLoading }: SectionGridProps) => {  
   if (isLoading) return <SectionGridSkeleton />;
 
-  if (!songs || songs.length === 0) {
+  // Verifique se songs é um array válido
+  if (!Array.isArray(songs) || songs.length === 0) {
     return <p className="text-center text-zinc-400">No songs available.</p>;
   }
 
