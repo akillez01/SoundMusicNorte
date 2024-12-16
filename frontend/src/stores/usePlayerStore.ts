@@ -23,20 +23,22 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentIndex: -1,
 
   initializeQueue: (songs: Song[]) => {
+    if (!songs.length) return;
     set({
       queue: songs,
-      currentSong: songs[0] || null,
-      currentIndex: songs.length > 0 ? 0 : -1,
+      currentSong: songs[0],
+      currentIndex: 0,
+      isPlaying: false,
     });
   },
 
   playAlbum: (songs: Song[], startIndex = 0) => {
-    if (songs.length === 0 || startIndex < 0 || startIndex >= songs.length) return;
+    if (!songs.length || startIndex < 0 || startIndex >= songs.length) return;
 
     const song = songs[startIndex];
     const socket = useChatStore.getState().socket;
 
-    if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
+    if (socket?.auth?.userId) {
       socket.emit("update_activity", {
         userId: socket.auth.userId,
         activity: `Playing ${song.title} by ${song.artist}`,
@@ -55,7 +57,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     if (!song) return;
 
     const socket = useChatStore.getState().socket;
-    if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
+    if (socket?.auth?.userId) {
       socket.emit("update_activity", {
         userId: socket.auth.userId,
         activity: `Playing ${song.title} by ${song.artist}`,
@@ -75,7 +77,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const currentSong = get().currentSong;
     const socket = useChatStore.getState().socket;
 
-    if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
+    if (socket?.auth?.userId) {
       socket.emit("update_activity", {
         userId: socket.auth.userId,
         activity: willStartPlaying && currentSong ? `Playing ${currentSong.title} by ${currentSong.artist}` : "Idle",
@@ -93,7 +95,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       const nextSong = queue[nextIndex];
       const socket = useChatStore.getState().socket;
 
-      if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
+      if (socket?.auth?.userId) {
         socket.emit("update_activity", {
           userId: socket.auth.userId,
           activity: `Playing ${nextSong.title} by ${nextSong.artist}`,
@@ -106,15 +108,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         isPlaying: true,
       });
     } else {
-      set({ isPlaying: false });
-      const socket = useChatStore.getState().socket;
-
-      if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
-        socket.emit("update_activity", {
-          userId: socket.auth.userId,
-          activity: `Idle`,
-        });
-      }
+      stopPlayback();
     }
   },
 
@@ -126,7 +120,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       const prevSong = queue[prevIndex];
       const socket = useChatStore.getState().socket;
 
-      if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
+      if (socket?.auth?.userId) {
         socket.emit("update_activity", {
           userId: socket.auth.userId,
           activity: `Playing ${prevSong.title} by ${prevSong.artist}`,
@@ -139,15 +133,25 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         isPlaying: true,
       });
     } else {
-      set({ isPlaying: false });
-      const socket = useChatStore.getState().socket;
-
-      if (socket.auth && typeof socket.auth === 'object' && 'userId' in socket.auth) {
-        socket.emit("update_activity", {
-          userId: socket.auth.userId,
-          activity: `Idle`,
-        });
-      }
+      stopPlayback();
     }
   },
 }));
+
+// Helper function to stop playback and update activity
+function stopPlayback() {
+  const socket = useChatStore.getState().socket;
+
+  if (socket?.auth?.userId) {
+    socket.emit("update_activity", {
+      userId: socket.auth.userId,
+      activity: "Idle",
+    });
+  }
+
+  set({
+    isPlaying: false,
+    currentSong: null,
+    currentIndex: -1,
+  });
+}

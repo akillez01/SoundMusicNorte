@@ -52,7 +52,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     } catch (error: any) {
       console.error("Error in deleteSong", error);
       toast.error("Error deleting song");
-      set({ error: error.message });
+      set({ error: error.response?.data?.message || error.message });
     } finally {
       set({ isLoading: false });
     }
@@ -72,7 +72,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     } catch (error: any) {
       console.error("Error in deleteAlbum", error);
       toast.error("Failed to delete album: " + error.message);
-      set({ error: error.message });
+      set({ error: error.response?.data?.message || error.message });
     } finally {
       set({ isLoading: false });
     }
@@ -82,10 +82,10 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/songs");
-      set({ songs: response.data });
+      set({ songs: Array.isArray(response.data) ? response.data : [] });
     } catch (error: any) {
       console.error("Error in fetchSongs", error);
-      set({ error: error.message });
+      set({ error: error.response?.data?.message || error.message });
     } finally {
       set({ isLoading: false });
     }
@@ -95,10 +95,10 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/stats");
-      set({ stats: response.data });
+      set({ stats: response.data || { totalSongs: 0, totalAlbums: 0, totalUsers: 0, totalArtists: 0 } });
     } catch (error: any) {
       console.error("Error in fetchStats", error);
-      set({ error: error.message });
+      set({ error: error.response?.data?.message || error.message });
     } finally {
       set({ isLoading: false });
     }
@@ -108,7 +108,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/albums");
-      set({ albums: response.data });
+      set({ albums: Array.isArray(response.data) ? response.data : [] });
     } catch (error: any) {
       console.error("Error in fetchAlbums", error);
       set({ error: error.response?.data?.message || error.message });
@@ -121,7 +121,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get(`/albums/${id}`);
-      set({ currentAlbum: response.data });
+      set({ currentAlbum: response.data || null });
     } catch (error: any) {
       console.error("Error in fetchAlbumById", error);
       set({ error: error.response?.data?.message || error.message });
@@ -134,7 +134,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/songs/featured");
-      set({ featuredSongs: response.data });
+      set({ featuredSongs: Array.isArray(response.data) ? response.data : [] });
     } catch (error: any) {
       console.error("Error in fetchFeaturedSongs", error);
       set({ error: error.response?.data?.message || error.message });
@@ -147,7 +147,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/songs/made-for-you");
-      set({ madeForYouSongs: response.data });
+      set({ madeForYouSongs: Array.isArray(response.data) ? response.data : [] });
     } catch (error: any) {
       console.error("Error in fetchMadeForYouSongs", error);
       set({ error: error.response?.data?.message || error.message });
@@ -160,7 +160,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axiosInstance.get("/songs/trending");
-      set({ trendingSongs: response.data });
+      set({ trendingSongs: Array.isArray(response.data) ? response.data : [] });
     } catch (error: any) {
       console.error("Error in fetchTrendingSongs", error);
       set({ error: error.response?.data?.message || error.message });

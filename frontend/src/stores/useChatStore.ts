@@ -26,7 +26,7 @@ interface ChatStore {
 const baseURL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
 
 const socket = io(baseURL, {
-  autoConnect: false, // only connect if user is authenticated
+  autoConnect: false,
   withCredentials: true,
 });
 
@@ -49,11 +49,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const response = await axiosInstance.get("/users");
       set({ users: response.data });
     } catch (error: any) {
-      if (axios.isAxiosError(error) && error.response) {
-        set({ error: error.response.data.message });
-      } else {
-        set({ error: "An unexpected error occurred" });
-      }
+      const errorMessage = axios.isAxiosError(error) && error.response
+        ? error.response.data.message
+        : "An unexpected error occurred";
+      set({ error: errorMessage });
     } finally {
       set({ isLoading: false });
     }
@@ -89,23 +88,24 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
 
       socket.on("receive_message", (message: Message) => {
-        set((state) => ({
-          messages: [...state.messages, message],
-        }));
+        set((state) => ({ messages: [...state.messages, message] }));
       });
 
       socket.on("message_sent", (message: Message) => {
-        set((state) => ({
-          messages: [...state.messages, message],
-        }));
+        set((state) => ({ messages: [...state.messages, message] }));
       });
 
       socket.on("activity_updated", ({ userId, activity }) => {
         set((state) => {
-          const newActivities = new Map(state.userActivities);
-          newActivities.set(userId, activity);
-          return { userActivities: newActivities };
+          const updatedActivities = new Map(state.userActivities);
+          updatedActivities.set(userId, activity);
+          return { userActivities: updatedActivities };
         });
+      });
+
+      socket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+        set({ error: "Failed to connect to the server." });
       });
 
       set({ isConnected: true });
@@ -119,24 +119,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  sendMessage: (_receiverId, senderId, content) => {
-    const socket = get().socket;
-    if (!socket) return;
+  sendMessage: (receiverId, senderId, content) => {
+    if (!get().isConnected) {
+      console.error("Socket is not connected. Message not sent.");
+      return;
+    }
 
-    socket.emit("send_message", { receiverId: _receiverId, senderId, content });
+    socket.emit("send_message", { receiverId, senderId, content }, (response: { success: boolean; error?: string }) => {
+      if (!response.success) {
+        console.error("Failed to send message:", response.error);
+        set({ error: response.error || "Failed to send message." });
+      }
+    });
   },
 
-  fetchMessages: async (_userId: string) => {
+  fetchMessages: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.get(`/users/messages/${_userId}`);
+      const response = await axiosInstance.get(`/users/messages/${userId}`);
       set({ messages: response.data });
     } catch (error: any) {
-      if (axios.isAxiosError(error) && error.response) {
-        set({ error: error.response.data.message });
-      } else {
-        set({ error: "An unexpected error occurred" });
-      }
+      const errorMessage = axios.isAxiosError(error) && error.response
+        ? error.response.data.message
+        : "An unexpected error occurred";
+      set({ error: errorMessage });
     } finally {
       set({ isLoading: false });
     }
