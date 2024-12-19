@@ -1,0 +1,28 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "no-unused-vars": "off", // Desativa o no-unused-vars padrão do ESLint
+    "@typescript-eslint/no-unused-vars": ["warn"], // Usa a versão do TypeScript
+    "@typescript-eslint/no-explicit-any": "off", // Desativa erros com 'any' (se necessário)
+    "react-refresh/only-export-components": "warn" // Mantém o aviso sobre Fast Refresh
+  }
+}
